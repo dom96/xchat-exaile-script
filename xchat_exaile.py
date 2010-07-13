@@ -1,4 +1,4 @@
-import xchat, sys, dbus
+import xchat, dbus, os
 __module_name__ = "Exaile" 
 __module_version__ = "1.0" 
 __module_description__ = "Exaile now playing script with some other cool features" 
@@ -53,24 +53,28 @@ def printExaileVersion(word, word_eol, userdata):
     #xchat.prnt(Err.get_dbus_message()) # Unsafe *cough*
 
 def chooseSong(word, word_eol, next):
-  try:
-    remote_object = bus.get_object("org.exaile.Exaile","/org/exaile/Exaile")
-    iface = dbus.Interface(remote_object, "org.exaile.Exaile")
-
-    if next:
-      iface.next_track()
+  if next:
+    if os.system("exaile -n") == 0:
+      xchat.prnt("Song changed")
     else:
-      iface.prev_track()
-      
-  except dbus.exceptions.DBusException as Err:
-    xchat.prnt("An error occured, but xchat crashes when it gets printed.")
-    #xchat.prnt(Err.get_dbus_message()) # Unsafe *cough*
+      xchat.prnt("Song changing failed")
+  else:
+    if os.system("exaile -p") == 0:
+      xchat.prnt("Song changed")
+    else:
+      xchat.prnt("Song changing failed")
+
+def playPause(word, word_eol, ud):
+  if os.system("exaile -t") == 0:
+    xchat.prnt("Pause/play")
+  else:
+    xchat.prnt("Pause/play failed")
 
 xchat.prnt("Exaile script initialized")
 xchat.prnt("Use /np to announce the currently played song")
 xchat.hook_command("np", printSong, False)
 xchat.hook_command("npc", printSong, True)
 xchat.hook_command("exaile_ver", printExaileVersion)
-#xchat.hook_command("exnext", chooseSong, True)
-#xchat.hook_command("exprev", chooseSong, False)
-
+xchat.hook_command("exnext", chooseSong, True)
+xchat.hook_command("exprev", chooseSong, False)
+xchat.hook_command("pause", playPause)
